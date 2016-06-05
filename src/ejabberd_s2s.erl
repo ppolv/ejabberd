@@ -479,6 +479,7 @@ get_commands_spec() ->
 			    "Number of incoming s2s connections on "
 			    "the node",
                         policy = admin,
+                        scopes = ['ejabberd:admin'],
 			module = ?MODULE, function = incoming_s2s_number,
 			args = [], result = {s2s_incoming, integer}},
      #ejabberd_commands{name = outgoing_s2s_number,
@@ -487,6 +488,7 @@ get_commands_spec() ->
 			    "Number of outgoing s2s connections on "
 			    "the node",
                         policy = admin,
+                        scopes = ['ejabberd:admin'],
 			module = ?MODULE, function = outgoing_s2s_number,
 			args = [], result = {s2s_outgoing, integer}}].
 

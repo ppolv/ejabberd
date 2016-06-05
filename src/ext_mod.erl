@@ -51,6 +51,8 @@ start() ->
 stop() ->
     ejabberd_commands:unregister_commands(get_commands_spec()).
 
+
+%% Note: no scope, these are available over ejabberdctl only
 get_commands_spec() ->
     [#ejabberd_commands{name = modules_update_specs,
                         tags = [admin,modules],
