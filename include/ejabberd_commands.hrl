@@ -26,12 +26,14 @@
                  {tuple, [rterm()]} | {list, rterm()} |
                  rescode | restuple.
 
+-type scope() :: 'ejabberd:admin' | 'ejabberd:user'.
 -record(ejabberd_commands,
 	{name                    :: atom(),
          tags = []               :: [atom()] | '_' | '$2',
          desc = ""               :: string() | '_' | '$3',
          longdesc = ""           :: string() | '_',
 	 version = 0             :: integer(),
+         scopes = []             :: [scope()],
 	 module                  :: atom() | '_',
          function                :: atom() | '_',
          args = []               :: [aterm()] | '_' | '$1' | '$2',

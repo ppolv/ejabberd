@@ -151,7 +151,7 @@ authenticate_client(Client, Ctx) -> {ok, {Ctx, {client, Client}}}.
 
 verify_resowner_scope({user, _User, _Server}, Scope, Ctx) ->
     Cmds = ejabberd_commands:get_commands(),
-    Cmds1 = [sasl_auth | Cmds],
+    Cmds1 = ['ejabberd:admin', 'ejabberd:user', sasl_auth | Cmds],
     RegisteredScope = [atom_to_binary(C, utf8) || C <- Cmds1],
     case oauth2_priv_set:is_subset(oauth2_priv_set:new(Scope),
                                    oauth2_priv_set:new(RegisteredScope)) of
@@ -189,7 +189,7 @@ associate_refresh_token(_RefreshToken, _Context, AppContext) ->
     {ok, AppContext}.
 
 
-check_token(User, Server, Scope, Token) ->
+check_token(User, Server, ScopeList, Token) ->
     LUser = jid:nodeprep(User),
     LServer = jid:nameprep(Server),
     case catch mnesia:dirty_read(oauth_token, Token) of
@@ -198,23 +198,26 @@ check_token(User, Server, Scope, Token) ->
                       expire = Expire}] ->
             {MegaSecs, Secs, _} = os:timestamp(),
             TS = 1000000 * MegaSecs + Secs,
-            oauth2_priv_set:is_member(
-              Scope, oauth2_priv_set:new(TokenScope)) andalso
-                Expire > TS;
+            TokenScopeSet = oauth2_priv_set:new(TokenScope),
+            lists:any(fun(Scope) ->
+                oauth2_priv_set:is_member(Scope, TokenScopeSet) end,
+                ScopeList) andalso Expire > TS;
         _ ->
             false
     end.
 
-check_token(Scope, Token) ->
+%% True if token has *any* of the scopes in ScopeList
+check_token(ScopeList, Token) ->
     case catch mnesia:dirty_read(oauth_token, Token) of
         [#oauth_token{us = {LUser, LServer},
                       scope = TokenScope,
                       expire = Expire}] ->
             {MegaSecs, Secs, _} = os:timestamp(),
             TS = 1000000 * MegaSecs + Secs,
-            case oauth2_priv_set:is_member(
-                   Scope, oauth2_priv_set:new(TokenScope)) andalso
-                Expire > TS of
+            TokenScopeSet = oauth2_priv_set:new(TokenScope),
+            case lists:any(fun(Scope) ->
+               oauth2_priv_set:is_member(Scope, TokenScopeSet) end,
+               ScopeList) andalso Expire > TS of
                 true -> {ok, LUser, LServer};
                 false -> false
             end;
